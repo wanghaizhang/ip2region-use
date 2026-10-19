@@ -1,0 +1,10 @@
+# 运行时日志（不提交）
+logs/
+*.log
+
+# Node 依赖（部署时按需重新安装）
+node_modules/
+
+# 系统文件
+.DS_Store
+Thumbs.db

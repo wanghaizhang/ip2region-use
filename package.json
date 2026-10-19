@@ -1,0 +1,19 @@
+{
+  "name": "huaweicloud-ip2region",
+  "version": "1.0.0",
+  "description": "IP2Region API for Huawei Cloud FunctionGraph",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "prepare-xdb": "node scripts/download-xdb.js"
+  },
+  "dependencies": {
+    "ip2region": "^2.3.0",
+    "ip2region.js": "^3.1.8",
+    "versions": "^15.5.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
