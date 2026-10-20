@@ -1,0 +1,41 @@
+# OpenResty 安装产物（二进制 / 动态库 / 依赖）
+*.exe
+*.dll
+*.so
+nginx
+resty
+resty.bat
+restydoc
+restydoc-index
+restydoc-index.bat
+restydoc.bat
+tablepool.lua
+dump-header.lua
+
+# lualib 为 OpenResty 自带的完整依赖库，不入库
+lualib/
+
+# 手册 / pod
+pod/
+
+# 日志与运行期文件
+logs/
+nginx.pid
+
+# 默认配置副本
+conf/*.default
+conf/win-utf
+conf/koi-utf
+conf/koi-win
+
+# 示例 / 调试产物
+html/
+err.txt
+out.txt
+test-bit.lua
+test-ip2region.lua
+
+# 无关说明文件
+COPYRIGHT
+README.txt
+README_UNOFFICIAL.txt
