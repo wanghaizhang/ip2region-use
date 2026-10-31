@@ -1,0 +1,55 @@
+# ============================================================================
+# image-service Docker Compose — imgproxy (internal engine only)
+# ============================================================================
+# imgproxy runs on the `image_backend` network and does NOT publish any port to
+# the host. OpenResty reaches it by container name `imgproxy`.
+#
+#   docker network create image_backend
+#   docker compose up -d
+#
+# NOTE: The OpenResty container must also be attached to `image_backend` so it
+# can resolve `imgproxy`. See README section "Docker networking".
+# ============================================================================
+
+services:
+  imgproxy:
+    image: ghcr.io/imgproxy/imgproxy:latest
+    container_name: imgproxy
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      IMGPROXY_BIND: "0.0.0.0:8080"
+      # --- SSRF protection: reject private/loopback/link-local sources ---
+      IMGPROXY_ALLOW_PRIVATE_SOURCE_ADDRESSES: "false"
+      IMGPROXY_ALLOW_LOOPBACK_SOURCE_ADDRESSES: "false"
+      IMGPROXY_ALLOW_LINK_LOCAL_SOURCE_ADDRESSES: "false"
+      IMGPROXY_ALLOW_SOURCE_FROM_PRIVATE_NETWORKS: "false"
+      # --- resource limits ---
+      IMGPROXY_MAX_SRC_RESOLUTION: "20"        # 20 MP source ceiling
+      IMGPROXY_MAX_SRC_FILE_SIZE: "20971520"   # 20 MiB
+      IMGPROXY_MAX_RESULT_DIMENSION: "2560"    # longest output edge
+      IMGPROXY_MAX_RESULT_PIXELS: "10485760"   # 10 MP output
+      IMGPROXY_MAX_GIF_FRAMES: "1"             # disable animated GIF processing
+      IMGPROXY_MAX_IMAGE_PIXELS: "20971520"
+      IMGPROXY_ENABLED_EXTENSIONS: "jpeg,png,webp,gif,avif"
+    expose:
+      - "8080"
+    networks:
+      - image_backend
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    cpus: "2.0"
+    volumes:
+      - imgproxy_cache:/cache
+
+volumes:
+  imgproxy_cache:
+
+networks:
+  image_backend:
+    driver: bridge
