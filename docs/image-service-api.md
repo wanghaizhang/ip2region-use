@@ -21,6 +21,7 @@
 | 参数 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `src` | string | 是 | 源图片地址，`http(s)://`。必须通过 SSRF 校验（仅允许白名单域名，见配置 `allowed_sources`） |
+| `format_mode` | string | 否 | 源地址编码格式：`plain`（默认）输出明文 `http(s)://` 源（带 `/plain/` 前缀）；`base64` 输出 URL-safe base64 编码的源（去掉 `/plain/`）。imgproxy v4 两种格式都接受。 |
 
 ### 1.3 响应
 
@@ -202,3 +203,5 @@ imgproxy v4 URL 结构：
 - **signature**：`hmac_sha256(secret_key, salt .. path)` 的 base64url 编码，首个路径段。
 - **processed_options**：处理操作段，`key:value` 用 `/` 连接。
 - 无处理参数时，`processed_options` 默认为 `rs:fill:100:100:1`。
+
+> `format_mode` 切换说明：API 默认输出格式 1（plain）。请求加 `?format_mode=base64` 时，`imgproxy.build_url` 将源 URL 做 URL-safe base64 编码后作为 source 段（去掉 `/plain/`）。两种格式的签名公式完全一致（`hmac_sha256(key, salt + /{ops}/{source})`），imgproxy v4 均接受。实测两种格式输出字节数完全相同。

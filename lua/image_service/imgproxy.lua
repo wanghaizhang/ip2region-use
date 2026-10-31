@@ -19,7 +19,11 @@ local M = {}
 -- NOTE: there is NO "/process/" prefix in v4 — the handler is mounted at "/*".
 -- Putting "/process/" in front would make imgproxy treat "process" as the
 -- signature, which fails verification.
-function M.build_url(source_url, processed_path)
+-- source_format: "plain" (default) emits /plain/{http(s)://url};
+--   "base64" emits urlsafe-b64({http(s)://url}) with no /plain/ prefix.
+--   imgproxy v4 accepts both.
+function M.build_url(source_url, processed_path, source_format)
+    source_format = source_format or "plain"
     -- imgproxy v4 URL:  /{sig}/{processed_path}/{source}
     -- processed_path is never empty: imgproxy still needs a modifier so it
     -- knows what to do. When the caller supplies no params we default to
@@ -30,12 +34,18 @@ function M.build_url(source_url, processed_path)
     -- we always emit "/plain/".
     -- ngx.var.arg_src arrives percent-encoded (e.g. https%3A%2F%2F...). Decode it
     -- so imgproxy sees a real URL. Temp-file sources (/__imgsrv_tmp/token) have
-    -- no %XX sequences, so decode_uri is a no-op for them.
+    -- no %XX sequences, so unescape_uri is a no-op for them.
     source_url = ngx.unescape_uri(source_url)
     if processed_path == "" then
         processed_path = "rs:fill:100:100:1"
     end
-    local path = "/" .. processed_path .. "/plain/" .. source_url
+    local path
+    if source_format == "base64" then
+        local b64 = ngx.encode_base64(source_url)
+        path = "/" .. processed_path .. "/" .. b64
+    else
+        path = "/" .. processed_path .. "/plain/" .. source_url
+    end
     local sig = security.sign_path(path)
     if not sig then return nil, "sign failed" end
     -- signature MUST be the first path segment after the port:
@@ -47,9 +57,10 @@ end
 -- Process an image via imgproxy.
 -- source_url: validated source (internal temp URL or allowed HTTPS URL)
 -- processed_path: imgproxy params (e.g. "w800/h600/if_webp/q80")
+-- source_format: "plain" or "base64" (default "plain")
 -- Returns (status, body, ctype, error).
-function M.process(source_url, processed_path)
-    local url, err = M.build_url(source_url, processed_path)
+function M.process(source_url, processed_path, source_format)
+    local url, err = M.build_url(source_url, processed_path, source_format)
     if not url then return nil, nil, nil, err end
 
     local status, hdrs, body, ctype = http.get(url, { timeout_ms = config.process_timeout_ms })

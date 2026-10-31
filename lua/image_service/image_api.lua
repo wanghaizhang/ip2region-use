@@ -144,7 +144,12 @@ function M.handle_url()
     if preserve_hdr and preserve_hdr ~= "0" then parts[#parts + 1] = "preserve_hdr:1" end
 
     local processed = table.concat(parts, "/")
-    local status, body, ctype, ierr = imgproxy.process(url, processed)
+    -- source format: "base64" emits URL-safe base64 of the source URL (no /plain/),
+    -- "plain" (default) emits the http(s):// URL after /plain/. imgproxy v4 accepts both.
+    local source_format = "plain"
+    local fmt_mode = ngx.var.arg_format_mode
+    if fmt_mode == "base64" then source_format = "base64" end
+    local status, body, ctype, ierr = imgproxy.process(url, processed, source_format)
     if not status then
         return output.send_error(502, ierr)
     end
