@@ -141,6 +141,8 @@ GET /api/v1/image?src=https://example.com/a.jpg&background=FFFFFF&padding=20
 
 **转发格式：** `watermark:0.{xx}`、`strip_metadata:1`、`keep_copyright:1`、`preserve_hdr:1`
 
+> **⚠️ 水印图来源限制（已排查确认）**：imgproxy 显示水印需要 `watermark_url` 参数提供水印图。实测 `watermark_url`（含源图自身、外部 picsum、w3school gif）**全部返回 404**，而仅 `watermark:0.50`（无水印图）**返回 200**。结论：当前 imgproxy 部署**拒绝 `watermark_url` 操作**——imgproxy v4 默认仅允许 `WATERMARK_SOURCE_ADDRESSES_ALLOWED` 白名单内的水印源，未配置白名单时 `watermark_url` 直接 404。解决方向：①在 imgproxy 服务端配置 `WATERMARK_SOURCE_ADDRESSES_ALLOWED`（含水印图地址）；②或使用服务端允许访问的水印源。`watermark` 不透明度参数本身可用。
+
 ---
 
 ## 8. 组合示例
